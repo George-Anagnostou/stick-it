@@ -4,66 +4,74 @@ import (
 	"testing"
 )
 
-// TestGenerateSpotIt verifies the projective plane properties
-func TestGenerateSpotIt(t *testing.T) {
-	// Mock input: 57 stickers
-	stickers := make([]string, 57)
-	for i := 0; i < 57; i++ {
-		stickers[i] = string(rune('A' + i))
+func TestGenerateSpotItGeneric(t *testing.T) {
+	tests := []struct {
+		stickerCount int
+		expectedN    int
+		expectedSize int
+	}{
+		{7, 2, 7},
+		{12, 2, 7},
+		{13, 3, 13},
+		{30, 3, 13},
+		{31, 5, 31},
+		{56, 5, 31},
+		{57, 7, 57},
+		{100, 7, 57},
 	}
 
-	deck := GenerateSpotIt(stickers)
-
-	// Check 1: Correct number of cards
-	if len(deck) != 57 {
-		t.Errorf("Expected 57 cards, got %d", len(deck))
-	}
-
-	// Check 2: Each card has 8 unique symbols
-	for i, card := range deck {
-		if len(card) != 8 {
-			t.Errorf("Card %d has %d symbols, expected 8", i, len(card))
+	for _, tt := range tests {
+		stickers := make([]string, tt.stickerCount)
+		for i := 0; i < tt.stickerCount; i++ {
+			stickers[i] = string(rune('A' + i))
 		}
-		seen := make(map[string]bool)
-		for _, sym := range card {
-			if seen[sym] {
-				t.Errorf("Duplicate symbol %s on card %d", sym, i)
+
+		deck := GenerateSpotItGeneric(stickers)
+
+		if len(deck) != tt.expectedSize {
+			t.Errorf("For %d stickers, expected %d cards, got %d", tt.stickerCount, tt.expectedSize, len(deck))
+		}
+
+		symbolsPerCard := tt.expectedN + 1
+		for i, card := range deck {
+			if len(card) != symbolsPerCard {
+				t.Errorf("Card %d has %d symbols, expected %d", i, len(card), symbolsPerCard)
 			}
-			seen[sym] = true
+			seen := make(map[string]bool)
+			for _, sym := range card {
+				if seen[sym] {
+					t.Errorf("Duplicate symbol %s on card %d", sym, i)
+				}
+				seen[sym] = true
+			}
 		}
-	}
 
-	// Check 3: Exactly 1 match between each pair
-	for i := 0; i < len(deck)-1; i++ {
-		for j := i + 1; j < len(deck); j++ {
-			matches := 0
-			for _, s1 := range deck[i] {
-				for _, s2 := range deck[j] {
-					if s1 == s2 {
-						matches++
+		for i := 0; i < len(deck)-1; i++ {
+			for j := i + 1; j < len(deck); j++ {
+				matches := 0
+				for _, s1 := range deck[i] {
+					for _, s2 := range deck[j] {
+						if s1 == s2 {
+							matches++
+						}
 					}
 				}
-			}
-			if matches != 1 {
-				t.Errorf("Cards %d and %d have %d matches, expected 1", i, j, matches)
-			}
-		}
-	}
-
-	// Check 4: All symbols are within range (0-56)
-	for i, card := range deck {
-		for _, sym := range card {
-			found := false
-			for _, s := range stickers[:57] {
-				if s == sym {
-					found = true
-					break
+				if matches != 1 {
+					t.Errorf("For %d stickers, cards %d and %d have %d matches: %v vs %v", tt.stickerCount, i, j, matches, deck[i], deck[j])
 				}
-			}
-			if !found {
-				t.Errorf("Card %d has out-of-range symbol %s", i, sym)
 			}
 		}
 	}
 }
 
+func TestGenerateSpotItGenericTooFew(t *testing.T) {
+	stickers := make([]string, 6)
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic for too few stickers, but none occurred")
+		} else if r != "Need at least 7 stickers" {
+			t.Errorf("Expected panic message 'Need at least 7 stickers', got %v", r)
+		}
+	}()
+	GenerateSpotItGeneric(stickers)
+}

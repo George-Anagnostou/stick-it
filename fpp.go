@@ -4,36 +4,60 @@ import (
 	"log"
 )
 
-// GenerateSpotIt creates a finite projective plane PG(2,n) for n=7
-func GenerateSpotIt(stickers []string) [][]string {
-	const n = 7
-	const totalCards = n*n + n + 1 // 57
-	const symbolsPerCard = n + 1   // 8
+// modInverse computes the modular inverse in GF(n)
+func modInverse(a, m int) int {
+	a = a % m
+	for x := 1; x < m; x++ {
+		if (a*x)%m == 1 {
+			return x
+		}
+	}
+	return 1 // Shouldn’t happen for prime m
+}
 
-	if len(stickers) < totalCards {
-		log.Fatalf("Need at least %d stickers, got %d", totalCards, len(stickers))
+func GenerateSpotItGeneric(stickers []string) [][]string {
+	orders := []struct {
+		n    int
+		size int
+	}{
+		{2, 7},
+		{3, 13},
+		{5, 31},
+		{7, 57},
 	}
 
-	// Step 1: Define points
+	n := 0
+	totalCards := 0
+	for _, order := range orders {
+		if order.size <= len(stickers) {
+			n = order.n
+			totalCards = order.size
+		} else {
+			break
+		}
+	}
+	if n == 0 {
+		panic("Need at least 7 stickers") // Changed from log.Fatalf
+	}
+	symbolsPerCard := n + 1
+
 	points := make([][3]int, totalCards)
 	pIndex := 0
-	for x := 0; x < n; x++ { // Finite points [x, y, 1]
+	for x := 0; x < n; x++ {
 		for y := 0; y < n; y++ {
 			points[pIndex] = [3]int{x, y, 1}
 			pIndex++
 		}
 	}
-	for m := 0; m < n; m++ { // Slope infinities [1, m, 0]
+	for m := 0; m < n; m++ {
 		points[pIndex] = [3]int{1, m, 0}
 		pIndex++
 	}
-	points[pIndex] = [3]int{0, 1, 0} // Vertical infinity [0, 1, 0]
+	points[pIndex] = [3]int{0, 1, 0}
 
-	// Step 2: Generate lines
 	cards := make([][]int, totalCards)
 	cardIndex := 0
 
-	// Helper: Get points on line ax + by + cz = 0 mod 7
 	getLinePoints := func(a, b, c int) []int {
 		line := make([]int, 0, symbolsPerCard)
 		seen := make(map[int]bool)
@@ -48,24 +72,22 @@ func GenerateSpotIt(stickers []string) [][]string {
 			}
 		}
 		if len(line) != symbolsPerCard {
-			log.Printf("Line [%d, %d, %d] has %d points, expected %d", a, b, c, len(line), symbolsPerCard)
+			log.Printf("Line [%d,%d,%d] for n=%d has %d points, expected %d", a, b, c, n, len(line), symbolsPerCard)
 		}
 		return line
 	}
 
-	// Generate 57 unique lines
 	usedLines := make(map[[3]int]bool)
 	for a := 0; a < n && cardIndex < totalCards; a++ {
 		for b := 0; b < n && cardIndex < totalCards; b++ {
 			for c := 0; c < n && cardIndex < totalCards; c++ {
 				if a == 0 && b == 0 && c == 0 {
-					continue // Invalid line
+					continue
 				}
 				coeffs := [3]int{a, b, c}
 				if usedLines[coeffs] {
 					continue
 				}
-				// Normalize: Scale by inverse of first non-zero coefficient
 				scale := 1
 				if a != 0 {
 					scale = modInverse(a, n)
@@ -87,10 +109,9 @@ func GenerateSpotIt(stickers []string) [][]string {
 	}
 
 	if cardIndex != totalCards {
-		log.Fatalf("Generated %d cards, expected %d", cardIndex, totalCards)
+		log.Fatalf("Generated %d cards, expected %d for n=%d", cardIndex, totalCards, n)
 	}
 
-	// Step 3: Map to stickers
 	deck := make([][]string, totalCards)
 	for i := 0; i < totalCards; i++ {
 		deck[i] = make([]string, symbolsPerCard)
@@ -108,33 +129,24 @@ func GenerateSpotIt(stickers []string) [][]string {
 		}
 	}
 
-	// Step 4: Verify
 	for i := 0; i < totalCards-1; i++ {
 		for j := i + 1; j < totalCards; j++ {
 			matches := 0
-			for _, s1 := range cards[i] {
-				for _, s2 := range cards[j] {
+			matchSym := ""
+			for _, s1 := range deck[i] {
+				for _, s2 := range deck[j] {
 					if s1 == s2 {
 						matches++
+						matchSym = s1
 					}
 				}
 			}
 			if matches != 1 {
-				log.Printf("Cards %d and %d have %d matches: %v vs %v", i, j, matches, cards[i], cards[j])
+				log.Printf("Cards %d and %d have %d matches (%s): %v vs %v", i, j, matches, matchSym, deck[i], deck[j])
 			}
 		}
 	}
 
+	log.Printf("Generated deck with %d cards, %d symbols each", totalCards, symbolsPerCard)
 	return deck
-}
-
-// modInverse computes the modular inverse in GF(n)
-func modInverse(a, m int) int {
-	a = a % m
-	for x := 1; x < m; x++ {
-		if (a*x)%m == 1 {
-			return x
-		}
-	}
-	return 1 // Shouldn’t happen for prime m
 }
