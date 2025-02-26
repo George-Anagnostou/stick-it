@@ -2,33 +2,60 @@ body {
 	font-family: Arial, sans-serif;
 	text-align: center;
 	margin: 20px;
+	background: #f0f0f0;
 }
 
 #deck {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	gap: 10px;
-	margin-top: 20px;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 20px;
+	max-width: 1200px;
+	margin: 20px auto;
 }
 
 .card {
+	background: radial-gradient(circle, #fff, #e0e0e0);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 	border: 2px solid #333;
-	border-radius: 50%;
+	border-radius: 15px;
 	width: 200px;
 	height: 200px;
 	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	align-items: center;
-	background: #f9f9f9;
+	flex-direction: column;
+	justify-content: space-between;
 	padding: 10px;
 	box-sizing: border-box;
+	transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+	transform: scale(1.05);
+	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.card-number {
+	font-size: 14px;
+	font-weight: bold;
+	color: #333;
+	text-align: left;
+	padding: 5px 10px;
+	background: rgba(255, 255, 255, 0.8);
+	border-radius: 5px 5px 0 0;
+}
+
+.symbols: {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr); /* adjust based on symbol count */
+	gap: 5px;
+	flex-grow: 1;
+	align-items: center;
+	justify-items: center;
+	padding: 10px;
 }
 
 .card img {
-	width: 30px;
-	height: 30px;
+	width: 40px;
+	height: 40px;
 	object-fit: contain;
-	margin: 2px;
+	margin: 5px;
 }

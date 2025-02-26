@@ -22,30 +22,29 @@ document.getElementById("uploadForm").addEventListener("submit", async (e) => {
     result.deck.forEach((card, index) => {
       const cardDiv = document.createElement("div");
       cardDiv.className = "card";
-      cardDiv.innerHTML = `<strong>Card ${index + 1}</strong>`;
+
+      const numberDiv = document.createElement("div");
+      numberDiv.className = "card-number";
+      numberDiv.textContent = `Card ${index + 1}`;
+      cardDiv.appendChild(numberDiv);
+
+      const symbolsDiv = document.createElement("div");
+      symbolsDiv.className = "symbols";
+
+      // Dynamically adjust grid based on symbol count
+      const symbolCount = card.length;
+      const columns = Math.ceil(Math.sqrt(symbolCount));
+      symbolsDiv.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
 
       card.forEach((sticker) => {
-        console.log("Loading image:", `/uploads/${sticker}`);
         const img = document.createElement("img");
         img.src = `/uploads/${sticker}`;
-        img.onload = () => console.log(`Loaded: ${img.src}`);
         img.onerror = () => console.error(`Failed to load: ${img.src}`);
         img.setAttribute("src", img.src);
-        cardDiv.appendChild(img);
-
-        //fetch(`/uploads/${sticker}`)
-        //  .then((res) => res.blob())
-        //  .then((blob) => {
-        //    const img = document.createElement("img");
-        //    const url = URL.createObjectURL(blob);
-        //    img.src = url;
-        //    img.onload = () => console.log(`Loaded via blob: ${sticker}`);
-        //    img.onerror = () => console.error(`Failed via blob: ${sticker}`);
-        //    cardDiv.appendChild(img);
-        //  })
-        //  .catch((err) => console.error("Blob fetch error:", err));
+        symbolsDiv.appendChild(img);
       });
 
+      cardDiv.appendChild(symbolsDiv);
       deckDiv.appendChild(cardDiv);
     });
   } catch (error) {
