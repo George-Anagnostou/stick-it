@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>Spot It! Generator</title>
+		<link rel="stylesheet" href="/static/style.css">
+	</head>
+	<body>
+		<h1>Spot It! Generator</h1>
+		<p>Upload at least 57 stickers to generate a deck.</p>
+		<form id="uploadForm" enctype="multipart/form-data">
+			<input type="file" name="stickers" multiple accept="image/*">
+			<button type="submit">Generate Deck</button>
+		</form>
+		<div id="deck"></div>
+		<script src="/static/script.js"></script>
+	</body>
+</html>
