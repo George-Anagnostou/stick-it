@@ -63,7 +63,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		stickers[i] = filename
 	}
 
-	deck := GenerateSpotIt(stickers)
+	deck := GenerateSpotItGeneric(stickers)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
