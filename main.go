@@ -12,7 +12,7 @@ import (
 
 const uploadDir = "uploads"
 
-var stickers = make([]string, 57)
+var stickers []string // Dynamic size, no fixed allocation
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("templates/index.html")
@@ -31,15 +31,17 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := r.MultipartForm.File["stickers"]
-	if len(files) < 57 {
-		http.Error(w, "Need at least 57 stickers", 400)
+	if len(files) < 7 { // Minimum for n=2
+		http.Error(w, "Need at least 7 stickers", 400)
 		return
 	}
 
 	os.RemoveAll(uploadDir)
 	os.Mkdir(uploadDir, 0755)
 
-	for i, fileHeader := range files[:57] {
+	// Allocate stickers based on uploaded files
+	stickers = make([]string, len(files))
+	for i, fileHeader := range files { // Use full slice, not fixed 57
 		file, err := fileHeader.Open()
 		if err != nil {
 			http.Error(w, "Error reading file", 500)
@@ -63,7 +65,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		stickers[i] = filename
 	}
 
-	deck := GenerateSpotIt(stickers)
+	deck := GenerateSpotItGeneric(stickers)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -94,3 +96,4 @@ func main() {
 	log.Println("Server starting on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
+
