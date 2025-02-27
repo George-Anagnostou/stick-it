@@ -31,16 +31,24 @@ document.getElementById("uploadForm").addEventListener("submit", async (e) => {
       const symbolsDiv = document.createElement("div");
       symbolsDiv.className = "symbols";
 
-      // Dynamically adjust grid based on symbol count
+      // Circular arrangement
       const symbolCount = card.length;
-      const columns = Math.ceil(Math.sqrt(symbolCount));
-      symbolsDiv.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+      const radius = 60;
 
-      card.forEach((sticker) => {
+      card.forEach((sticker, i) => {
         const img = document.createElement("img");
         img.src = `/uploads/${sticker}`;
         img.onerror = () => console.error(`Failed to load: ${img.src}`);
         img.setAttribute("src", img.src);
+
+        // Position in a circle
+        const angle = (i / symbolCount) * 2 * Math.PI;
+        const x = radius * Math.cos(angle);
+        const y = radius * Math.sin(angle);
+        img.style.left = `calc(50% + ${x}px)`;
+        img.style.top = `calc(50% + ${y}px)`;
+        img.style.transform = "translate(-50%, -50%)";
+
         symbolsDiv.appendChild(img);
       });
 
