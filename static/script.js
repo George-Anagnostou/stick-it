@@ -55,8 +55,14 @@ document.getElementById("uploadForm").addEventListener("submit", async (e) => {
       cardDiv.appendChild(symbolsDiv);
       deckDiv.appendChild(cardDiv);
     });
+
+    document.getElementById("exportButton").style.display = "block";
   } catch (error) {
     console.error("Error:", error);
     alert("Something went wrong!");
   }
+});
+
+document.getElementById("exportButton").addEventListener("click", () => {
+  window.location.href = "/export";
 });
