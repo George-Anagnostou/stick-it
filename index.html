@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spot It! Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #deck {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        .card {
+            border: 2px solid #333;
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 5px;
+            justify-items: center;
+            align-content: center;
+            background: #f9f9f9;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .card img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <h1>Spot It! Generator</h1>
+    <p>Upload 57+ images or use placeholders.</p>
+    <input type="file" id="stickerInput" multiple accept="image/*">
+    <button onclick="generateDeck()">Generate Deck</button>
+    <div id="deck"></div>
+
+    <script>
+        function generateSpotIt(n = 7) {
+            const totalCards = n * n + n + 1;
+            const symbolsPerCard = n + 1;
+            
+            const points = [];
+            for (let x = 0; x < n; x++) {
+                for (let y = 0; y < n; y++) {
+                    points.push([x, y, 1]);
+                }
+            }
+            for (let m = 0; m < n; m++) {
+                points.push([1, m, 0]);
+            }
+            points.push([0, 1, 0]);
+            
+            const cards = [];
+            const usedLines = new Set();
+            
+            function getLinePoints(a, b, c) {
+                const card = [];
+                const seen = new Set();
+                for (let i = 0; i < totalCards; i++) {
+                    const [x, y, z] = points[i];
+                    if ((a * x + b * y + c * z) % n === 0 && !seen.has(i)) {
+                        card.push(i);
+                        seen.add(i);
+                        if (card.length === symbolsPerCard) break;
+                    }
+                }
+                return card;
+            }
+            
+            for (let a = 0; a < n; a++) {
+                for (let b = 0; b < n; b++) {
+                    for (let c = 0; c < n; c++) {
+                        if (a === 0 && b === 0 && c === 0) continue;
+                        let scale = 1;
+                        if (a !== 0) scale = modInverse(a, n);
+                        else if (b !== 0) scale = modInverse(b, n);
+                        else scale = modInverse(c, n);
+                        const norm = [(a * scale) % n, (b * scale) % n, (c * scale) % n];
+                        const key = norm.join(',');
+                        if (usedLines.has(key)) continue;
+                        usedLines.add(key);
+                        
+                        const card = getLinePoints(a, b, c);
+                        if (card.length === symbolsPerCard) {
+                            cards.push(card);
+                        }
+                        if (cards.length === totalCards) break;
+                    }
+                    if (cards.length === totalCards) break;
+                }
+                if (cards.length === totalCards) break;
+            }
+            
+            for (let i = 0; i < totalCards - 1; i++) {
+                for (let j = i + 1; j < totalCards; j++) {
+                    const matches = cards[i].filter(s => cards[j].includes(s)).length;
+                    if (matches !== 1) {
+                        console.log(`Cards ${i} and ${j} have ${matches} matches:`, cards[i], cards[j]);
+                    }
+                }
+            }
+            
+            return cards;
+        }
+
+        function modInverse(a, m) {
+            a = ((a % m) + m) % m;
+            for (let x = 1; x < m; x++) {
+                if ((a * x) % m === 1) return x;
+            }
+            return 1;
+        }
+
+        function generateDeck() {
+            const files = document.getElementById('stickerInput').files;
+            const deck = generateSpotIt();
+            
+            if (files.length >= 57) {
+                const stickers = [];
+                const readers = [];
+                for (let i = 0; i < 57; i++) {
+                    const reader = new FileReader();
+                    readers.push(reader);
+                    reader.onload = () => stickers[i] = reader.result;
+                    reader.readAsDataURL(files[i]);
+                }
+                Promise.all(readers.map(r => new Promise(resolve => r.onloadend = resolve)))
+                    .then(() => {
+                        renderDeck(deck.map(card => card.map(sym => stickers[sym])));
+                    });
+            } else {
+                // Fallback to placeholders
+                renderDeck(deck.map(card => card.map(sym => `https://via.placeholder.com/20?text=${sym}`)));
+            }
+        }
+
+        function renderDeck(deck) {
+            const deckDiv = document.getElementById('deck');
+            deckDiv.innerHTML = '';
+            deck.forEach((card, index) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card';
+                card.forEach(sticker => {
+                    const img = document.createElement('img');
+                    img.src = sticker;
+                    cardDiv.appendChild(img);
+                });
+                deckDiv.appendChild(cardDiv);
+            });
+        }
+    </script>
+</body>
+</html>
